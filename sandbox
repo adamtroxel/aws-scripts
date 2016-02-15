@@ -1,0 +1,2 @@
+aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text
+
