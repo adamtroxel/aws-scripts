@@ -1,2 +1,30 @@
-aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text
+#! /bin/bash
+
+#aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text
+
+#aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text
+aws ec2 run-instances --image-id ami-905cbcf0 --count 1 --instance-type m3.medium --key-name MigrationKP --security-groups web-app
+
+
+MASTER_INSTANCE_PROD="$(aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text)"
+
+echo $MASTER_INSTANCE_PROD
+
+#aws ec2 run-instances --image-id ami-905cbcf0 --count 1 --instance-type m3.medium --key-name MigrationKP --security-groups web-app
+
+
+
+
+#aws ec2 run-instances --image-id $MASTERAMI_ID --count 1 --instance-type m3.medium --key-name MigrationKP --security-groups web-app
+#ami-905cbcf0
+
+
+#Create an instance from ami
+#aws ec2 run-instances --image-id ami-905cbcf0 --count 1 --instance-type m3.medium --key-name MigrationKP --security-groups web-app
+
+
+
+#aws ec2 describe-instances --filters "Name=image-id,Values=ami-905cbcf0" --query Reservations[*].Instances[*].InstanceId --output text
+
+
 

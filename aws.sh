@@ -3,7 +3,10 @@ STAGELB=www-nwea-preprod
 SYSDATE="$(date +"%y-%m-%d")"
 MASTERAMI="${SYSDATE}.master"
 SLAVEAMI="${SYSDATE}.slave"
-STAGEINSTANCE="$(aws elb describe-load-balancers --load-balancer-name $STAGELB --query LoadBalancerDescriptions[*].Instances[*] --output text)"
+STAGEINSTANCE="$(aws ec2 describe-instances --filters "Name=network-interface.addresses.association.public-ip,Values=54.200.63.238" --query Reservations[*].Instances[*].InstanceId --output=text"
+
+#STAGEINSTANCE="$(aws elb describe-load-balancers --load-balancer-name $STAGELB --query LoadBalancerDescriptions[*].Instances[*] --output text)"
+
 SECONDS=0
 
 echo The following script will do the following

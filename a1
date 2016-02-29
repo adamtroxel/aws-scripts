@@ -1,0 +1,7 @@
+#! /bin/bash
+STAGELB=www-nwea-preprod
+SYSDATE="$(date +"%y-%m-%d")"
+MASTERAMI="${SYSDATE}.master"
+SLAVEAMI="${SYSDATE}.slave"
+STAGEINSTANCE="$(aws ec2 describe-instances --filters "Name=network-interface.addresses.association.public-ip,Values=54.200.63.238" --query Reservations[*].Instances[*].InstanceId --output=text)"
+echo $STAGEINSTANCE
