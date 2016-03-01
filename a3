@@ -1,0 +1,35 @@
+#! /bin/bash
+# Variables
+SYSDATE="$(date +"%Y-%m-%d")"
+LOGFILE="${SYSDATE}.log"
+MASTERAMI="${SYSDATE}.master"
+SLAVEAMI="${SYSDATE}.www.nwea.org.slave"
+STAGE_IP="54.200.63.238"
+STAGEINSTANCE="$(aws ec2 describe-instances --filters "Name=network-interface.addresses.association.public-ip,Values=$STAGE_IP" --query Reservations[*].Instances[*].InstanceId --output=text)"
+SECONDS=0
+
+touch $LOGFILE
+echo $(date) >> $LOGFILE
+echo "Deployment Begin" >> $LOGFILE
+echo "----------------" >> $LOGFILE
+
+
+
+
+
+
+
+echo $STAGEINSTANCE >> $LOGFILE
+
+SLAVEAMI_ID="$(aws ec2 create-image --instance-id $STAGEINSTANCE --description $SYSDATE --name $SLAVEAMI --output text  | sed -e 's/^.*ami/ami/')" 
+
+echo "your AMI SLAVE is: "$SLAVEAMI_ID
+
+aws ec2 wait --region us-west-2 image-available --image-ids $SLAVEAMI_ID
+
+echo the slave ami: $SLAVEAMI is available
+
+aws ec2 wait instance-running --instance-ids $STAGEINSTANCE
+
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
