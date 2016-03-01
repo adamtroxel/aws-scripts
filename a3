@@ -2,34 +2,94 @@
 # Variables
 SYSDATE="$(date +"%Y-%m-%d")"
 LOGFILE="${SYSDATE}.log"
-MASTERAMI="${SYSDATE}.master"
+MASTERAMI="${SYSDATE}.www.nwea.org.master"
 SLAVEAMI="${SYSDATE}.www.nwea.org.slave"
 STAGE_IP="54.200.63.238"
 STAGEINSTANCE="$(aws ec2 describe-instances --filters "Name=network-interface.addresses.association.public-ip,Values=$STAGE_IP" --query Reservations[*].Instances[*].InstanceId --output=text)"
 SECONDS=0
 
 touch $LOGFILE
-echo $(date) >> $LOGFILE
-echo "Deployment Begin" >> $LOGFILE
-echo "----------------" >> $LOGFILE
+echo $(date) | tee -a $LOGFILE
+echo "Deployment Begin" | tee -a $LOGFILE
+echo "----------------" | tee -a $LOGFILE
+
+echo "STAGE 1 BEGIN" | tee -a $LOGFILE
 
 
 
 
 
 
-
-echo $STAGEINSTANCE >> $LOGFILE
+echo $STAGEINSTANCE "is the instance associated with "$STAGE_IP | tee -a $LOGFILE
 
 SLAVEAMI_ID="$(aws ec2 create-image --instance-id $STAGEINSTANCE --description $SYSDATE --name $SLAVEAMI --output text  | sed -e 's/^.*ami/ami/')" 
 
-echo "your AMI SLAVE is: "$SLAVEAMI_ID
+echo "New AMI slave created: "$SLAVEAMI_ID | tee -a $LOGFILE
+echo "Waiting for " $SLAVEAMI " to become available"
 
 aws ec2 wait --region us-west-2 image-available --image-ids $SLAVEAMI_ID
 
-echo the slave ami: $SLAVEAMI is available
+echo "the slave ami: " $SLAVEAMI " is available" | tee -a $LOGFILE
 
-aws ec2 wait instance-running --instance-ids $STAGEINSTANCE
+aws ec2 wait --region us-west-2 instance-running --instance-ids $STAGEINSTANCE
 
+echo Waiting 180 seconds to make sure instance is available for next step | tee -a $LOGFILE
+
+secs=$((3 * 60))
+while [ $secs -gt 0 ]; do
+   echo -ne "$secs\033[0K\r"
+   sleep 1
+   : $((secs--))
+done
+
+echo 180 Second wait complete | tee -a $LOGFILE
+echo STAGE 1 COMPLETE | tee -a $LOGFILE
+echo STAGE 2 BEGIN | tee -a $LOGFILE
+echo Preparing to create Master AMI | tee -a $LOGFILE
+
+
+
+
+#Disable RSYNC on stage
+RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?format=text")"
+echo  Current RSYNC status is: $RYSNCSTATUS
+
+while [ $RYSNCSTATUS =  "enabled" ]
+do
+        echo "Disabling rsync on $STAGEINSTANCE"
+        RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic  bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?toggle=0&format=text&submit=1")"
+        echo RSYNC is : $RYSNCSTATUS 
+done
+
+MASTERAMI_ID="$(aws ec2 create-image --instance-id $STAGEINSTANCE --description $SYSDATE --name $MASTERAMI --output text  | sed -e 's/^.*ami/ami/')"
+
+aws ec2 wait --region us-west-2 image-available --image-ids $MASTERAMI_ID
+
+echo "the master ami: " $MASTERAMI " is available" | tee -a $LOGFILE
+
+aws ec2 wait --region us-west-2 instance-running --instance-ids $STAGEINSTANCE
+
+
+# Renable RSYNC on Stage
+RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?format=text")"
+echo  Current RSYNC status is: $RYSNCSTATUS
+
+while [ $RYSNCSTATUS =  "disabled" ]
+do
+        echo "turning ON rsync on $STAGEINSTANCE"
+        RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic  bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?toggle=1&format=text&submit=1")"
+        echo RSYNC is now : $RYSNCSTATUS 
+done
+
+echo Stage has been reset and rsync is $RYSNCSTATUS 
+
+
+
+
+##
+##
+#
+# 
 duration=$SECONDS
-echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+echo $(($duration / 60))  "minutes and "$(($duration % 60)) "seconds elapsed." | tee -a $LOGFILE
+

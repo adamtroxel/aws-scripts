@@ -1,0 +1,27 @@
+#! /bin/bash
+
+#Disable RSYNC on stage
+RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?format=text")" 
+echo  Current RSYNC status is: $RYSNCSTATUS
+
+while [ $RYSNCSTATUS =  "enabled" ]
+do
+	echo "Disabling rsync on $STAGEINSTANCE"
+	RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic  bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?toggle=0&format=text&submit=1")"
+        echo RSYNC is : $RYSNCSTATUS 
+done	
+
+echo DOING SOMETHING FOR MASTER 
+
+# Renable RSYNC on Stage
+RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?format=text")"
+echo  Current RSYNC status is: $RYSNCSTATUS
+
+while [ $RYSNCSTATUS =  "disabled" ]
+do
+        echo "turning ON rsync on $STAGEINSTANCE"
+        RYSNCSTATUS="$(curl -s -k -H "Authorization: Basic  bndlYS1hZG1pbjpSc3luY0lzQ29vbA==" "https://www-stage.nwea.org/synctool/index.cgi?toggle=1&format=text&submit=1")"
+        echo RSYNC is now : $RYSNCSTATUS 
+done
+
+echo Stage has been reset and rsync is $RYSNCSTATUS 

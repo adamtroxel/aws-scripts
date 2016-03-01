@@ -1,7 +1,21 @@
 #! /bin/bash
-STAGELB=www-nwea-preprod
+# Variables
 SYSDATE="$(date +"%y-%m-%d")"
+LOGFILE="${SYSDATE}.log"
 MASTERAMI="${SYSDATE}.master"
 SLAVEAMI="${SYSDATE}.slave"
 STAGEINSTANCE="$(aws ec2 describe-instances --filters "Name=network-interface.addresses.association.public-ip,Values=54.200.63.238" --query Reservations[*].Instances[*].InstanceId --output=text)"
-echo $STAGEINSTANCE
+
+touch $LOGFILE
+echo $(date)
+echo "Deployment Begin"
+echo "----------------"
+
+
+
+
+
+
+
+echo $STAGEINSTANCE >> $LOGFILE
+
